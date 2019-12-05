@@ -1,13 +1,14 @@
-###################
-## Openshift Command aliases
-###################
+##############################
+# Openshift Command aliases
+##############################
+
+
 OCP_USERNAME=''
 OCP_DEV_URL=''
 OCP_QA_URL=''
 
 alias ocdev='oc login ${OCP_DEV_URL} -u ${OCP_USERNAME} '
 alias ocqa='oc login ${OCP_QA_URL} -u ${OCP_USERNAME} '
-
 
 alias ologin='oc rsh'
 # OC get resources
@@ -23,13 +24,11 @@ alias obc='oc get bc -o wide '
 alias oall='oc get all -l run='
 alias oalln='_(){ oc get all -l run=$1 -o name ;};_'
 
-
 alias opodo='_(){ oc get pod -l app=$1 -o wide ;};_'
 alias opd='_(){ oc get pod -l app=$1 -o jsonpath="{ .metadata.name }" ;};_'
 alias oimg='oc get pods -o jsonpath="{..image}" |tr -s "[[:space:]]" "\n" |sort |uniq -c'
 alias olcp='oc get pods -o=jsonpath=''{range .items[*]}{"\n"}{.metadata.name}{":\t"}{range .spec.containers[*]}{.image}{", "}{end}{end}'' |sort'
 alias olp='oc get pods  -o=jsonpath="{..image}" -l app='
-
 
 alias odesc='oc describe'
 alias odhist='oc rollout history dc'
@@ -41,7 +40,6 @@ alias osync='oc rsync'
 alias ocp='oc cp'
 alias ovol='oc volume dc --all'
 
-
 # Delete Resources
 alias odel='oc delete'
 alias odelo='_(){ oc delete $1 -l app=$2 ;};_'
@@ -52,7 +50,6 @@ alias odelpod='oc delete pod'
 alias odelsvc='oc delete svc'
 alias odelbc='oc delete bc'
 alias odelpvc='oc delete pvc'
-
 
 # Export yaml config
 alias oexp='_(){ oc get $@ -o yaml --export ;};_'
@@ -69,7 +66,6 @@ alias ostopd='oc scale --replicas=0 dc'
 alias ostartd='oc scale --replicas=1 dc'
 alias ostarts='oc scale --replicas=1 statefulsets'
 alias ostops='oc scale --replicas=0 statefulsets'
-
 
 alias opclean='for p in $(oc get pods | grep Terminating | awk ''{print $1}''); do oc delete pod $p --grace-period=0 --force;done'
 alias opodr='oc get pods -o jsonpath=''{.items[?(@.status.phase=="Running")].metadata.name}'''
