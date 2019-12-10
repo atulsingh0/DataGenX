@@ -1,0 +1,40 @@
+
+# In Command Line:
+--env HTTP_PROXY="http://<user>:<password>@<proxy_server>:<port>" 
+--env HTTPS_PROXY="http://<user>:<password>@<proxy_server>:<port>" 
+--env ALL_PROXY="http://<user>:<password>@<proxy_server>:<port>" 
+
+
+# In DockerFile
+ENV HTTP_PROXY "http://<user>:<password>@<proxy_server>:<port>" 
+ENV HTTPS_PROXY "http://<user>:<password>@<proxy_server>:<port>" 
+ENV ALL_PROXY "http://<user>:<password>@<proxy_server>:<port>" 
+
+
+# Create/Edit ~/.docker/config.json file (All below json in this file, create file if not exists)
+{
+ "proxies":
+ {
+   "default":
+   {
+     "httpProxy": "http://<user>:<password>@<proxy_server>:<port>",
+     "httpsProxy": "http://<user>:<password>@<proxy_server>:<port>",
+     "allProxy": "http://<user>:<password>@<proxy_server>:<port>"
+   }
+ }
+}
+
+
+# Altering Docker Syetem File (you have to be root user for this)
+sudo mkdir -p /etc/systemd/system/docker.service.d
+sudo vi /etc/systemd/system/docker.service.d/http-proxy.conf  #(all below content to this file - line 31 to 34)
+[Service]
+Environment="HTTP_PROXY=http://<user>:<password>@<proxy_server>:<port>"
+Environment="HTTPS_PROXY=http://<user>:<password>@<proxy_server>:<port>"
+Environment="ALL_PROXY=http://<user>:<password>@<proxy_server>:<port>"
+# now run below command to restart the docker deamon
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+# verify
+sudo systemctl show --property=Environment docker
+
