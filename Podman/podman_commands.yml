@@ -1,0 +1,151 @@
+# Podman Commands
+
+# List containers
+podman ps --format="table {{.ID}} {{.Names}} {{.Status}}"
+
+# To see the port assigned by Podman
+podman port <container name>
+
+# Get the container IP address
+podman inspect -f '{{ .NetworkSettings.IPAddress }}' <container name>
+
+# Podman has subcommands to: create a new container (run), delete a container (rm), list containers (ps), stop a container (stop), and start a process in a container (exec).
+# Default container storage is ephemeral, meaning its contents are not present after the container restarts or is removed.
+
+
+# Configuring Registries in Podman
+To configure registries for the podman command, you need to update the /etc/containers/registries.conf file. Edit the registries entry in the [registries.search] section, adding an entry to the values list.
+
+[registries.search]
+registries = ["registry.redhat.io", "quay.io"]
+
+
+# Secure connections to a registry require a trusted certificate. To support insecure connections, add the registry name to the registries entry in [registries.insecure] section of /etc/containers/registries.conf file:
+
+[registries.insecure]
+registries = ['localhost:5000']
+
+
+# Registry Authentication
+podman login -u username -p password registry.connect.redhat.com
+
+
+# Saving Images
+podman save --compress [-o FILE_NAME] IMAGE_NAME[:TAG]
+
+# Loading Images from tar
+podman load [-i FILE_NAME]
+
+# Deleting Images
+podman rmi [OPTIONS] IMAGE [IMAGE...]
+
+# Deleting all Images
+podman rmi -a
+
+# To identify which files were changed, created, or deleted since the container was started, use the diff subcommand. This subcommand only requires the container name or container ID:
+podman diff mysql-basic
+
+# To retrieve the list of mounted files and directories for a running container, use the podman inspect command:
+podman inspect -f "{{range .Mounts}}{{println .Destination}}{{end}}" CONTAINER_NAME/ID
+
+
+## Dockerfile Example
+The following is an example Dockerfile for building a simple Apache web server container:
+
+# This is a comment line 1
+FROM rhel7:7.5 2
+LABEL description="This is a custom httpd container image" 3
+MAINTAINER John Doe <jdoe@xyz.com> 4
+RUN yum install -y httpd 5
+EXPOSE 80 6
+ENV LogLevel "info" 7
+ADD http://someserver.com/filename.pdf /var/www/html 8
+COPY ./src/ /var/www/html/ 9
+USER apache 10
+ENTRYPOINT ["/usr/sbin/httpd"] 11
+CMD ["-D", "FOREGROUND"] 12
+1
+
+Lines that begin with a hash, or pound, sign (#) are comments.
+
+2
+
+The FROM instruction declares that the new container image extends rhel7:7.5 container base image. Dockerfiles can use any other container image as a base image, not only images from operating system distributions. Red Hat provides a set of container images that are certified and tested and highly recommends using these container images as a base.
+
+3 
+
+The LABEL is responsible for adding generic metadata to an image. A LABEL is a simple key-value pair.
+
+4
+
+MAINTAINER indicates the Author field of the generated container image's metadata. You can use the podman inspect command to view image metadata.
+
+5
+
+RUN executes commands in a new layer on top of the current image. The shell that is used to execute commands is /bin/sh.
+
+6
+
+EXPOSE indicates that the container listens on the specified network port at runtime. The EXPOSE instruction defines metadata only; it does not make ports accessible from the host. The -p option in the podman run command exposes container ports from the host.
+
+7
+
+ENV is responsible for defining environment variables that are available in the container. You can declare multiple ENV instructions within the Dockerfile. You can use the env command inside the container to view each of the environment variables.
+
+8
+
+ADD instruction copies files or folders from a local or remote source and adds them to the container's file system. If used to copy local files, those must be in the working directory. ADD instruction unpacks local .tar files to the destination image directory.
+
+9
+
+COPY copies files from the working directory and adds them to the container's file system. It is not possible to copy a remote file using its URL with this Dockerfile instruction.
+
+10
+
+USER specifies the username or the UID to use when running the container image for the RUN, CMD, and ENTRYPOINT instructions. It is a good practice to define a different user other than root for security reasons.
+
+11
+
+ENTRYPOINT specifies the default command to execute when the image runs in a container. If omitted, the default ENTRYPOINT is /bin/sh -c.
+
+12
+
+CMD provides the default arguments for the ENTRYPOINT instruction. If the default ENTRYPOINT applies (/bin/sh -c), then CMD forms an executable command and parameters that run at container start.
+
+
+# Both the ADD and COPY instructions copy the files, retaining permissions, with root as the owner, even if the USER instruction is specified. Red Hat recommends using a RUN instruction after the copy to change the owner and avoid “permission denied” errors.
+
+# Podman creates many anonymous intermediate images during the build process. They are not be listed unless -a is used. Use the --layers=false option of build subcommand to instruct Podman to delete intermediate images.
+podman build -f mycon.docker --layers=false --no-cache -t mycon
+
+# podman images --format "table {{.ID}} {{.Repository}} {{.Tag}}"
+
+# execute any command in image
+podman run --rm busybox ls -l
+
+# execute any command in image interactive
+podman run --rm -it busybox ls -l
+
+# detach mode (--rm and -d cant go together)
+podman run  -it -d busybox ls -l
+above cmd will not give you any o/p as such cause this will run in background
+podman run  -it -d busybox /bin/sh   # check podman ps
+
+# execute any command in container
+podman exec 0db53c5ef461 ls
+podman exec [options] container command [arguments]
+
+# Overriding Container Binaries
+Many container images do not contain all of the troubleshooting commands users expect to find in regular OS installations, such as telnet, netcat, ip, or traceroute. Stripping the image from basic utilities or binaries allows the image to remain slim, thus, running many containers per host.
+
+One way to temporarily access some of these missing commands is mounting the host binaries folders, such as /bin, /sbin, and /lib, as volumes inside the container. This is possible because the -v option from podman run command does not require matching VOLUME instructions to be present in the Dockerfile of the container image.
+$ sudo podman run -it -v /bin:/bin image /bin/bash
+
+The directory of binaries to override depends on the base OS image. For example, some commands require shared libraries from the /lib directory. Some Linux distributions have different contents in /bin, /usr/bin, /lib, or /usr/lib, which would require to use the -v option for each directory.
+
+# Transferring Files To and Out of Containers
+a. Volume Mounts
+b. podman cp Commands
+c. Execute the command with 'exec' and pipe the o/p to host/container file system
+
+# Before mounting any volumes on the Podman and OpenShift host, ensure you apply the correct SELinux context to the directory. The correct context is container_file_t. Also, make sure the ownership and permissions of the directory are set according to the USER directive in the Dockerfile that was used to build the container being deployed. Most of the time you will have to use the numeric UID and GID rather than the user and group names to adjust ownership and permissions of the volume directory.

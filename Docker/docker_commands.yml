@@ -14,7 +14,7 @@ $ docker run -d <image>:<tab>
 
 
 # View all running container
-$ docker ps 
+$ docker ps
 $ docker ps -q  #only container id
 
 # View all container
@@ -35,7 +35,7 @@ $ docker rm <container_id/s>
 $ docker rm $(docker ps -a -q -f status=exited)
 $ docker container prune
 
-# if want to delete container after run 
+# if want to delete container after run
 $ docker run --rm <image>
 
 # delete docker image
@@ -48,7 +48,7 @@ $ docker run --rm prakhar1989/static-site
 # -d detach, -P exposed all published port
 $ docker run -d -P --name static-site prakhar1989/static-site
 
-# to check all published port assigned 
+# to check all published port assigned
 $ docker port static-site
 
 # to check specific published port assigned
@@ -66,7 +66,7 @@ $ docker run -d --name redisDynamic  -p 6379 redis:latest
 # persisting data or binding volumes ( -v <host-dir>:<container-dir> )
 $ docker run -d --name redisMapped -v /opt/docker/data/redis:/data redis
 
-* 
+*
 
 # stop container
 $ docker stop <container_id/s>
@@ -94,25 +94,25 @@ $ docker rmi $(docker images -q)
 
 # Commands Explaination
 $ docker build -t user1/node-example .
-This says to Docker: build (build) the image from the Dockerfile at the root level ( . ) and tag it -t as user1/node-example. 
+This says to Docker: build (build) the image from the Dockerfile at the root level ( . ) and tag it -t as user1/node-example.
 Don’t forget the period. this is how Docker knows where to look for the Dockerfile.
 
 $ docker build -t user1/node-example . -f /path/to/Dockerfile
 
 
 $ docker run -p 3003:8080 -d user1/node-example
-This tells Docker to run (run) the image that was built and tagged as user1/node-example, expose port 3003 on the host machine 
+This tells Docker to run (run) the image that was built and tagged as user1/node-example, expose port 3003 on the host machine
 and look for port 8080 inside the Docker container (-p 3003:8080), and start the process as a background daemon process (-d).
 
 
 # Docker File term:
 FROM: Start from a base image. This could be an os like Alpine or Ubuntu, or a known image that contains dependencies for us like databases, or language tools.
 WORKDIR: set a working directory inside the container.
-COPY <src> <dest>: copy the files you need. For simplicity, I copy it all and build inside the container. When you're copying a file into a directory then you need to specify the 
+COPY <src> <dest>: copy the files you need. For simplicity, I copy it all and build inside the container. When you're copying a file into a directory then you need to specify the
                   filename as part of the destination.
 USER: Set user for running docker commands
-RUN <command>: allows you to execute any command as you would at a command prompt, for example installing different application packages or running a build command. 
-               The results of the RUN are persisted to the image so it's important not to leave any unnecessary or temporary files on the disk as these will be included 
+RUN <command>: allows you to execute any command as you would at a command prompt, for example installing different application packages or running a build command.
+               The results of the RUN are persisted to the image so it's important not to leave any unnecessary or temporary files on the disk as these will be included
                in the image.
 ENV: sets the environment variable <key> to the value <value>. This value will be in the environment for all subsequent instructions in the build stage and can be replaced inline in many as well.
 EXPOSE: you can set ports to expose. I chose 8000 since I also use that port in the servers.
@@ -134,16 +134,16 @@ Dummy DockerFile:
     EXPOSE 8000
     # run a command when running the container
     CMD ./server
-    
-    Or 
-    
+
+    Or
+
     FROM nginx:1.11-alpine
     RUN echo Building Container Image
     COPY index.html /usr/share/nginx/html/index.html
     EXPOSE 80
     CMD ["nginx", "-g", "daemon off;"] # use double quotes always
-    
-    
+
+
 
 When we build the image from above dockerfile, Docker will specify the commands that it's running and ends up giving us an image id on the last line
 
@@ -159,21 +159,21 @@ Tag & Push docker image:
     # or with a custom tag
     $ docker push <Docker Hub>/<my image name>:<tag_id>
 
-    
+
 Optimize your build time:
 # .dockerignore file:
-    To prevent sensitive files or directories from being included by mistake in images, you can add a file named .dockerignore. A Dockerfile copies the 
-    working directory into the Docker Image. As a result, this would include potentially sensitive information such as a passwords file which we'd want 
+    To prevent sensitive files or directories from being included by mistake in images, you can add a file named .dockerignore. A Dockerfile copies the
+    working directory into the Docker Image. As a result, this would include potentially sensitive information such as a passwords file which we'd want
     to manage outside the image.
     The ignore file supports directories and Regular expressions to define the restrictions, very similar to .gitignore.
-    * If you need to use the passwords as part of a RUN command then you need to copy, execute and delete the files as part of a 
+    * If you need to use the passwords as part of a RUN command then you need to copy, execute and delete the files as part of a
     single RUN command. Only the final state of the Docker container is persisted inside the image.
     The .dockerignore file can ensure that sensitive details are not included in a Docker Image. However they can also be used to improve the build time of images.
-    It's wise to ignore .git directories along with dependencies that are downloaded/built within the image such as node_modules. These are never used by the 
+    It's wise to ignore .git directories along with dependencies that are downloaded/built within the image such as node_modules. These are never used by the
     application running within the Docker Container and just add overhead to the build process.
-    
+
 # OnBuild:
-    While Dockerfile's are executed in order from top to bottom, you can trigger an instruction to be executed at a later time when the image is used as 
+    While Dockerfile's are executed in order from top to bottom, you can trigger an instruction to be executed at a later time when the image is used as
     the base for another image.
 
     OnBuild Image DockerFile
@@ -185,117 +185,117 @@ Optimize your build time:
     ONBUILD RUN npm install
     ONBUILD COPY . /usr/src/app
     CMD [ "npm", "start" ]
-    
-    Use this image as - 
+
+    Use this image as -
     FROM node:7-onbuild
     EXPOSE 3000
-    
-    The advantage of creating OnBuild images is that our Dockerfile is now much simpler and can be easily re-used across multiple projects without having 
+
+    The advantage of creating OnBuild images is that our Dockerfile is now much simpler and can be easily re-used across multiple projects without having
     to re-run the same steps improving build times.
-    
+
 
 Use Data Containers:
-        There are two ways of approaching stateful Containers, that is containers are store and persistent data for future use. One approach we've discussed 
+        There are two ways of approaching stateful Containers, that is containers are store and persistent data for future use. One approach we've discussed
         is using the -v <host-dir>:<container-dir> option to map directories. The other approach is to use Data Containers.
-        
-        Data Containers are containers whose sole responsibility is to be a place to store/manage data. Like other containers they are managed by the host system. 
+
+        Data Containers are containers whose sole responsibility is to be a place to store/manage data. Like other containers they are managed by the host system.
         However, they don't run when you perform a docker ps command.
-    
+
         Create a Data Container for storing configuration files using  (attached host dir /config with container)
         $ docker create -v /config --name dataContainer busybox
-        
+
         we can now copy files from our local client directory into the container.
         $ docker cp config.conf dataContainer:/config/
-        
+
         Now our Data Container has our config, we can reference the container when we launch dependent containers requiring the configuration file.
         Using the --volumes-from <container> option we can use the mount volumes from other containers inside the container being launched.
         $ docker run --volumes-from dataContainer ubuntu ls /config
-        
+
         If a /config directory already existed then, the volumes-from would override and be the directory used. You can map multiple volumes to a container.
-        
+
         Export/Import data containers:
         $ docker export dataContainer > dataContainer.tar
-        
+
         The below command will import the Data Container back into Docker.
-        $ docker import dataContainer.tar 
-    
-    
-    
+        $ docker import dataContainer.tar
+
+
+
 Persisting Data Using Volumes:
     Docker Volumes are created and assigned when containers are started. Data Volumes allow you to map a host directory to a container for sharing data.
-    This mapping is bi-directional. It allows data stored on the host to be accessed from within the container. It also means data saved by the process inside 
-    the container is persisted on the host. 
+    This mapping is bi-directional. It allows data stored on the host to be accessed from within the container. It also means data saved by the process inside
+    the container is persisted on the host.
     The same host directory can can be mapped with 2 and more containers.
-    
-    Data Volumes mapped to the host are great for persisting data. However, to gain access to them from another container you need to know the exact path 
+
+    Data Volumes mapped to the host are great for persisting data. However, to gain access to them from another container you need to know the exact path
     which can make it error-prone.
-    
+
     An alternate approach is to use -volumes-from. The parameter maps the mapped volumes from the source container to the container being launched.
-    In this case, we're mapping our Redis container's volume to an Ubuntu container. The /data directory only exists within our Redis container, however, 
+    In this case, we're mapping our Redis container's volume to an Ubuntu container. The /data directory only exists within our Redis container, however,
     because of -volumes-from our Ubuntu container can access the data.
 
     $ docker run --volumes-from r1 -it ubuntu ls /data
 
     This allows us to access volumes from other containers without having to be concerned how they're persisted on the host.
-    
-    Mounting Volumes gives the container full read and write access to the directory. You can specify read-only permissions on the directory by 
+
+    Mounting Volumes gives the container full read and write access to the directory. You can specify read-only permissions on the directory by
     adding the permissions :ro to the mount.     If the container attempts to modify data within the directory it will error.
-    
+
     $ docker run -v /docker/redis-data:/data:ro -it ubuntu rm -rf /data
-    
-    
+
+
 Managing Log Files:
-    By default, the Docker logs are outputting using the json-file logger meaning the output stored in a JSON file on the host. This can result in 
+    By default, the Docker logs are outputting using the json-file logger meaning the output stored in a JSON file on the host. This can result in
     large files filling the disk. As a result, you can change the log driver to move to a different destination.
     The Syslog log driver will write all the container logs to the central syslog on the host. "syslog is a widely used standard for message logging.
-    
+
     The command below will redirect the redis logs to syslog.
     $ docker run -d --name redis-syslog --log-driver=syslog redis
-    
+
     $ docker logs redis-syslog
     Error response from daemon: configured logging driver does not support reading
-    
+
     When the container is launched simply set the log-driver to none. No output will be logged.
     $ docker run -d --name redis-none --log-driver=none redis
-    
+
     $ docker inspect --format '{{ .HostConfig.LogConfig }}' redis-server
     {json-file map[]}
-    
+
     $ docker inspect --format '{{ .HostConfig.LogConfig }}' redis-syslog
     {syslog map[]}
-    
+
     $ docker inspect --format '{{ .HostConfig.LogConfig }}' redis-none
     {none map[]}
-    
-    
+
+
 Rootless Docker:
     Run the following command as lowprivuser to execute the script and install the components.
     curl -sSL https://get.docker.com/rootless | bash
-    
+
     After this has finished, proceed to the next step to setup the user environment and start launching containers.
     Rootless Docker has now been installed. The daemon can be started using the following script:
-    
+
     $   export XDG_RUNTIME_DIR=/tmp/docker-1001
     $   export PATH=/home/lowprivuser/bin:$PATH
     $   export DOCKER_HOST=unix:///tmp/docker-1001/docker.sock
     $   /home/lowprivuser/bin/dockerd-rootless.sh --experimental --storage-driver vfs
-    
+
     This will run in the foreground and allow you to see the debug output from the Rootless Docker Daemon.
-    
-    
+
+
 Formatting PS Output:
         $ docker ps --format '{{.Names}} container is using {{.Image}} image'
           elated_sammet container is using redis image
-          
+
         $ docker ps --format 'table {{.Names}}\t{{.Image}}'
         NAMES               IMAGE
         elated_sammet       redis
-        
+
         $ docker ps -q | xargs docker inspect --format '{{ .Id }} - {{ .Name }} - {{ .NetworkSettings.IPAddress }}'
         730ee7aa96a1b948f39a9adf3d44fa020753276ff53698b7252bc343d29f1836 - /elated_sammet - 172.18.0.2
-    
-    
-    
+
+
+
 
 
 This is why Docker is a huge help in enabling continous integration, delivery, and deployment pipelines. Here’s what that looks like in action:
@@ -306,8 +306,3 @@ Let the CI server pull it down and build the EXACT environment that will be used
 Tear down the entire thing when it’s finished.
 Deploy it out to a staging environment for testers or just notify the testers so that they can run a single command to configure and start the environment locally.
 Confidently roll exactly what you had in development, testing, and staging into production without any concerns about machine configuration.
-
-
-
-
-    
