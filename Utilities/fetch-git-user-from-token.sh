@@ -1,5 +1,12 @@
 #!/bin/bash
 
+mask() {
+    local n=5                        # number of chars to leave
+    local a="${1:0:${#1}-n}"         # take all but the last n chars
+    local b="${1:${#1}-n}"           # take the final n chars
+    printf "%s%s\n" "${a//?/*}" "$b" # substitute a with asterisks
+}
+
 get_user() {
     TOKENS="$1"
     HOST="$2"
@@ -21,7 +28,8 @@ get_user() {
             -H "Authorization: Bearer $TOKEN" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://"$API_ENDPOINT"/user | awk -F: '/login/ {print $2}' | tr -d "," | tr -d '"')
-        echo "$TOKEN\t|\t$USER"
+        MASKED_TOKEN=$(mask $TOKEN)
+        echo "$MASKED_TOKEN\t|\t$USER"
     done
 }
 
